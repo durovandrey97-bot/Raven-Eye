@@ -1,0 +1,294 @@
+<link rel="stylesheet" href="style.css">
+
+
+<meta charset="UTF-8">
+<!-- PWA META -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<link rel="manifest" href="#" id="manifest-link">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DEX Scanner">
+<meta name="theme-color" content="#0b0d12">
+
+<!-- DELETED USER BANNER -->
+<div class="deleted-banner" id="deleted-banner">
+  <div class="deleted-banner-icon">🚫</div>
+  <div class="deleted-banner-title">Доступ закрыт</div>
+  <div class="deleted-banner-sub">Ваш аккаунт был удалён администратором.<br>Обратитесь к администратору для восстановления доступа.</div>
+  <button class="deleted-banner-btn" onclick="window.doLogout()">← Выйти</button>
+</div>
+
+<!-- OFFLINE BANNER -->
+<div class="ptr-indicator" id="ptr-indicator">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="ptr-icon"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+  <span id="ptr-text">Потяните для обновления</span>
+</div>
+<div class="offline-banner" id="offline-banner">⚡ Нет соединения — данные могут быть устаревшими</div>
+
+<!-- ANIMATED BG -->
+<canvas class="app-canvas" id="app-canvas"></canvas>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-bg"></div>
+  <div class="login-grid"></div>
+  <div class="login-glow"></div>
+  <div class="login-box">
+    <div class="login-logo-wrap">
+      <div class="login-logo-icon" style="background:linear-gradient(135deg,rgba(212,175,55,.2),rgba(212,175,55,.05));border-color:rgba(212,175,55,.4)">
+        <svg width="22" height="22" viewBox="0 0 60 60" fill="none">
+          <path d="M10 30 C18 18 42 18 50 30 C42 42 18 42 10 30 Z" stroke="#d4af37" stroke-width="2" fill="rgba(212,175,55,.1)"/>
+          <path d="M8 30 C8 16 16 6 30 4" stroke="#d4af37" stroke-width="1.5" stroke-linecap="round" opacity=".3"/>
+          <path d="M52 30 C52 16 44 6 30 4" stroke="#d4af37" stroke-width="1.5" stroke-linecap="round" opacity=".3"/>
+          <path d="M14 30 C14 20 20 12 30 10" stroke="#d4af37" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+          <path d="M46 30 C46 20 40 12 30 10" stroke="#d4af37" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+          <circle cx="30" cy="30" r="7" fill="#d4af37"/>
+          <circle cx="30" cy="30" r="4" fill="#0b0d12"/>
+          <circle cx="28" cy="28" r="1.5" fill="#d4af37"/>
+        </svg>
+      </div>
+      <div class="login-logo-name" style="color:#e8dfc0">Raven<span style="color:#d4af37">Eye</span></div>
+    </div>
+    <div class="login-badge" style="background:rgba(212,175,55,.12);border-color:rgba(212,175,55,.3);color:#d4af37">PRO ACCESS</div>
+    <div class="login-heading">Вход в систему</div>
+    <div class="login-sub">Введите ваш персональный ID<br>для доступа к торговым сигналам</div>
+    <div class="login-label">Персональный ID</div>
+    <input class="login-inp" id="login-inp" placeholder="TRD-0000-XX" maxlength="12" oninput="this.value=this.value.toUpperCase()"/>
+    <button class="login-btn" id="login-btn">ВОЙТИ В СИСТЕМУ</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="main-app" style="display:none">
+
+<div class="topbar">
+  <div class="topbar-l">
+    <div class="logo">
+      <div class="logo-icon-wrap" style="background:linear-gradient(135deg,rgba(212,175,55,.18),rgba(212,175,55,.04));border-color:rgba(212,175,55,.45)">
+        <svg width="18" height="18" viewBox="0 0 60 60" fill="none">
+          <path d="M10 30 C18 18 42 18 50 30 C42 42 18 42 10 30 Z" stroke="#d4af37" stroke-width="2" fill="rgba(212,175,55,.1)"/>
+          <path d="M8 30 C8 16 16 6 30 4" stroke="#d4af37" stroke-width="1.5" stroke-linecap="round" opacity=".3"/>
+          <path d="M52 30 C52 16 44 6 30 4" stroke="#d4af37" stroke-width="1.5" stroke-linecap="round" opacity=".3"/>
+          <path d="M14 30 C14 20 20 12 30 10" stroke="#d4af37" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+          <path d="M46 30 C46 20 40 12 30 10" stroke="#d4af37" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+          <circle cx="30" cy="30" r="7" fill="#d4af37"/>
+          <circle cx="30" cy="30" r="4" fill="#0b0d12"/>
+          <circle cx="28" cy="28" r="1.5" fill="#d4af37"/>
+        </svg>
+      </div>
+      <div><div class="logo-txt" style="color:#e8dfc0">Raven<span style="color:#d4af37">Eye</span></div><div class="logo-sub" style="color:rgba(212,175,55,.45)">PRO v2.0</div></div>
+    </div>
+    <div class="sep"></div>
+    <span class="pill-live">LIVE</span>
+  </div>
+  <div class="topbar-r">
+    <span class="time-display" id="top-time">—</span>
+    <span class="best-spread-pill" id="top-best-spread" style="display:none"></span>
+    <button class="topbar-btn" id="mob-filter-btn" onclick="openMobFilters()" style="display:none">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      <span id="mob-filter-badge" style="display:none;width:6px;height:6px;border-radius:50%;background:#d4af37;position:absolute;top:4px;right:4px"></span>
+    </button>
+    <button class="topbar-btn" id="tg-connect-btn" title="Подключить Telegram">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 13.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+    </button>
+    <button class="topbar-btn" id="profile-open-btn">👤 Профиль</button>
+    <button class="topbar-btn" id="fs-btn" title="Полный экран">⛶</button>
+    <button class="topbar-btn" id="theme-btn" title="Сменить тему">🌙</button>
+    <button class="topbar-btn" id="alert-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+      Алерты
+    </button>
+  </div>
+</div>
+
+<div class="profile-bar" id="profile-bar">
+  <div class="profile-section">
+    <div class="profile-avatar" id="profile-avatar">?</div>
+    <div><div class="profile-name" id="profile-name">—</div><div class="profile-id-txt" id="profile-id-txt">ID: —</div></div>
+  </div>
+  <div class="profile-section">
+    <div><div class="profile-label">Капитал</div><div class="profile-balance" id="profile-balance">$0</div></div>
+  </div>
+  <div class="profile-section">
+    <div><div class="profile-label">Доступные сети</div><div class="net-grid" id="profile-nets">—</div></div>
+  </div>
+  <div class="profile-section">
+    <button class="btn-logout" id="logout-btn">← Выйти</button>
+  </div>
+</div>
+
+<div class="chain-tabs">
+  <button class="ctab on" onclick="setChain('all',this)">Все сети</button>
+  <button class="ctab" onclick="setChain('bsc',this)"><span class="cdot" style="background:#F0B90B"></span>BNB Chain<div class="spark" id="spark-bsc"></div></button>
+  <button class="ctab" onclick="setChain('arb',this)"><span class="cdot" style="background:#29B6F6"></span>Arbitrum<div class="spark" id="spark-arb"></div></button>
+  <button class="ctab" onclick="setChain('eth',this)"><span class="cdot" style="background:#6366F1"></span>Ethereum<div class="spark" id="spark-eth"></div></button>
+  <button class="ctab" onclick="setChain('sol',this)"><span class="cdot" style="background:#9945FF"></span>Solana<div class="spark" id="spark-sol"></div></button>
+
+</div>
+
+<div class="stats-row">
+  <div class="stat"><div class="stat-header"><span class="stat-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="8" width="3" height="7" rx="1"/><rect x="6.5" y="4" width="3" height="11" rx="1"/><rect x="12" y="1" width="3" height="14" rx="1"/></svg></span><span class="stat-l">Пар</span></div><div class="stat-v" id="st-pairs">—</div></div>
+  <div class="stat"><div class="stat-header"><span class="stat-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="1,10 5,5 8,8 11,3 15,6"/></svg></span><span class="stat-l">Ср. спред</span></div><div class="stat-v g" id="st-avg">—</div></div>
+  <div class="stat"><div class="stat-header"><span class="stat-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="8,1 10,6 15,6 11,9.5 12.5,15 8,12 3.5,15 5,9.5 1,6 6,6"/></svg></span><span class="stat-l">Лучший</span></div><div class="stat-v a" id="st-best">—</div></div>
+  <div class="stat"><div class="stat-header"><span class="stat-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/><path d="M5 3.5C6 2.5 7 2 8 2"/></svg></span><span class="stat-l">Объём 24h</span></div><div class="stat-v" id="st-vol">—</div></div>
+  <div class="stat"><div class="stat-header"><span class="stat-icon"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2" fill="currentColor" stroke="none"/><circle cx="8" cy="8" r="5" stroke-dasharray="2 2"/></svg></span><span class="stat-l">Статус</span></div><div class="stat-v g" id="st-cd" style="font-size:13px">—</div></div>
+</div>
+
+<div class="filters">
+  <span class="filter-label">Мин. спред:</span>
+  <button class="filter-pill on" id="sp-0" onclick="setSpread(0,this)">Любой</button>
+  <button class="filter-pill" id="sp-05" onclick="setSpread(0.5,this)">≥0.5%</button>
+  <button class="filter-pill" id="sp-1" onclick="setSpread(1,this)">≥1%</button>
+  <button class="filter-pill" id="sp-15" onclick="setSpread(1.5,this)">≥1.5%</button>
+  <div class="filter-sep"></div>
+  <span class="filter-label">Объём:</span>
+  <button class="filter-pill on" id="vol-0" onclick="setVol(0,this)">Любой</button>
+  <button class="filter-pill" id="vol-100" onclick="setVol(100000,this)">$100K+</button>
+  <button class="filter-pill" id="vol-1m" onclick="setVol(1000000,this)">$1M+</button>
+  <div class="filter-sep"></div>
+  <span class="filter-label">DEX:</span>
+  <button class="filter-pill on" id="dex-all" onclick="setDex('',this)">Все</button>
+  <button class="filter-pill" id="dex-uni" onclick="setDex('Uniswap',this)">Uniswap</button>
+  <button class="filter-pill" id="dex-cake" onclick="setDex('Pancake',this)">PancakeSwap</button>
+  <button class="filter-pill" id="dex-sushi" onclick="setDex('Sushi',this)">SushiSwap</button>
+  <button class="filter-pill" id="dex-inch" onclick="setDex('1inch',this)">1inch</button>
+  <div class="filter-sep"></div>
+  <span class="filter-label">Сорт.:</span>
+  <button class="sort-pill on" id="sort-spread" onclick="setSort('spread',this)">Спред ↓</button>
+  <button class="sort-pill" id="sort-vol" onclick="setSort('vol',this)">Объём</button>
+</div>
+
+<div class="main">
+  <div class="trades-col" id="trades-col">
+    <div class="empty-state">
+      <div class="radar-wrap">
+        <div class="radar-circle"></div><div class="radar-circle"></div><div class="radar-circle"></div>
+        <div class="radar-crosshair"></div>
+        <div class="radar-sweep"></div>
+        <div class="radar-ping" style="top:22px;left:50px"></div>
+        <div class="radar-dot" style="top:18px;left:46px"></div>
+      </div>
+      <div class="empty-title">Подключение к серверу...</div>
+      <div class="empty-sub" style="font-family:'Space Grotesk',sans-serif;font-size:13px">Получаем торговые сигналы<br>в реальном времени</div>
+    </div>
+  </div>
+  
+</div>
+
+
+<div class="botbar">
+  <div class="bot-left">
+    <div class="bot-info" id="api-status">● Подключение...</div>
+    <button class="reconnect-btn" id="reconnect-btn">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+      Reconnect
+    </button>
+  </div>
+  <div class="bot-ticker" id="bot-ticker" style="display:none"><span class="bot-ticker-inner" id="bot-ticker-text"></span></div>
+  <div class="bot-info" id="last-update">—</div>
+</div>
+
+</div><!-- /main-app -->
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal-sheet">
+    <div class="modal-drag"></div>
+    <div class="modal-hdr"><div class="modal-title">Профиль</div><button class="modal-close" id="profile-modal-close">✕</button></div>
+    <div class="modal-body" id="profile-modal-body"></div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal-sheet">
+    <div class="modal-drag"></div>
+    <div class="modal-hdr"><div class="modal-title" id="detail-modal-title">Детали сделки</div><button class="modal-close" id="detail-modal-close">✕</button></div>
+    <div class="modal-body" id="detail-modal-body"></div>
+  </div>
+</div>
+
+<!-- SHARE OVERLAY -->
+<div class="share-overlay" id="share-overlay">
+  <div>
+    <div class="share-card">
+      <div class="share-card-header">
+        <div class="share-card-logo">
+          <svg width="13" height="13" viewBox="0 0 60 60" fill="none"><path d="M10 30 C18 18 42 18 50 30 C42 42 18 42 10 30 Z" stroke="#d4af37" stroke-width="2" fill="rgba(212,175,55,.15)"/><circle cx="30" cy="30" r="7" fill="#d4af37"/><circle cx="30" cy="30" r="4" fill="#080a0f"/></svg>
+          RAVENEYE PRO
+        </div>
+        <div class="share-card-badge">LIVE SIGNAL</div>
+      </div>
+      <div class="share-card-body">
+        <div class="share-card-pair" id="share-pair">—</div>
+        <div class="share-card-pool" id="share-pool">—</div>
+        <div class="share-card-stats">
+          <div class="share-stat"><div class="share-stat-label">Спред</div><div class="share-stat-val" id="share-spread" style="color:#d4af37">—</div></div>
+          <div class="share-stat"><div class="share-stat-label">Доход</div><div class="share-stat-val" id="share-yield" style="color:#22c55e">—</div></div>
+          <div class="share-stat"><div class="share-stat-label">Объём</div><div class="share-stat-val" id="share-vol" style="color:rgba(255,255,255,.7)">—</div></div>
+        </div>
+      </div>
+      <div class="share-card-footer"><span id="share-chain">—</span><span id="share-time">—</span></div>
+    </div>
+    <div class="share-actions">
+      <button class="share-copy-btn" id="share-copy-btn">📋 Скопировать</button>
+      <button class="share-close-btn" id="share-close-btn">✕ Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="onboarding hidden" id="onboarding">
+  <div class="onboarding-card">
+    <div class="ob-header">
+      <div class="ob-logo">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.4);display:flex;align-items:center;justify-content:center">
+          <svg width="18" height="18" viewBox="0 0 60 60" fill="none"><path d="M10 30 C18 18 42 18 50 30 C42 42 18 42 10 30 Z" stroke="#d4af37" stroke-width="2" fill="rgba(212,175,55,.1)"/><circle cx="30" cy="30" r="7" fill="#d4af37"/><circle cx="30" cy="30" r="4" fill="#0b0d12"/></svg>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#e8dfc0">Raven<span style="color:#d4af37">Eye</span></div>
+          <div style="font-size:9px;color:rgba(212,175,55,.5);font-family:'JetBrains Mono',monospace">PRO ACCESS</div>
+        </div>
+      </div>
+      <div class="ob-welcome" id="ob-welcome-name">Добро пожаловать!</div>
+      <div class="ob-sub">Вы вошли в профессиональный сканер DEX арбитража в реальном времени</div>
+    </div>
+    <div class="ob-steps">
+      <div class="ob-step">
+        <div class="ob-step-num">1</div>
+        <div><div class="ob-step-title">Сигналы в реальном времени</div><div class="ob-step-sub">Карточки сделок обновляются автоматически. Нажмите на карточку для деталей и калькулятора прибыли</div></div>
+      </div>
+      <div class="ob-step">
+        <div class="ob-step-num">2</div>
+        <div><div class="ob-step-title">Фильтры и сети</div><div class="ob-step-sub">Переключайте сети вверху, фильтруйте по спреду, объёму и DEX. Сортировка по убыванию и возрастанию</div></div>
+      </div>
+      <div class="ob-step">
+        <div class="ob-step-num">3</div>
+        <div><div class="ob-step-title">🔒 Доступные сети</div><div class="ob-step-sub" id="ob-nets-sub">Доступ к сетям зависит от вашего капитала. Отслеживайте прогресс в профиле</div></div>
+      </div>
+    </div>
+    <button class="ob-btn" onclick="closeOnboarding()">Начать торговлю →</button>
+  </div>
+</div>
+
+<!-- PWA BANNER -->
+<div class="pwa-banner" id="pwa-banner">
+  <div class="pwa-icon">📱</div>
+  <div class="pwa-text"><div class="pwa-title">Установить DEX Scanner</div><div class="pwa-sub">Добавить на главный экран</div></div>
+  <button class="pwa-install-btn" id="pwa-install-btn">Установить</button>
+  <button class="pwa-close" id="pwa-close">✕</button>
+</div>
+
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<!-- App modules -->
+<script src="config.js"></script>
+<script src="state.js"></script>
+<script src="ui.js"></script>
+<script src="events.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
