@@ -1,6 +1,6 @@
 // ═══ RavenEye Защищённый API ═══
 // После деплоя Apps Script вставь URL сюда:
-var RAVENEYE_API_URL = ''; // например: https://script.google.com/macros/s/XXX/exec
+var RAVENEYE_API_URL = 'https://script.google.com/macros/s/AKfycbyZqhfFWZYP4S30xmuQgBixIkYnhNOcdVYsPSTkbCjIumyiE_1uHRU9b7PL9nrA5JhcfQ/exec'; // например: https://script.google.com/macros/s/XXX/exec
 var RAVENEYE_API_KEY = 'raven_xK9mP3_qW7nR2_vL5tY8_2024'; // ДОЛЖЕН совпадать с SECRET_KEY в скрипте
 
 async function apiCall(action, data) {
