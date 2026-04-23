@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — RavenEye</title>
+<link rel="icon" href="/icons/icon-192.png" type="image/png">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:#0b0d12;
+    color:#e8dfc0;
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    overflow:hidden;
+  }
+
+  /* Фоновая анимация */
+  .bg{position:fixed;inset:0;z-index:0;overflow:hidden}
+  .bg-circle{
+    position:absolute;border-radius:50%;filter:blur(80px);opacity:.12;
+    animation:float 8s ease-in-out infinite;
+  }
+  .bg-circle:nth-child(1){width:400px;height:400px;background:#d4af37;top:-100px;left:-100px;animation-delay:0s}
+  .bg-circle:nth-child(2){width:300px;height:300px;background:#6366f1;bottom:-80px;right:-80px;animation-delay:3s}
+  .bg-circle:nth-child(3){width:200px;height:200px;background:#29b6f6;top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:1.5s}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+
+  .wrap{
+    position:relative;z-index:1;
+    text-align:center;
+    max-width:420px;width:100%;
+  }
+
+  .logo{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    margin-bottom:40px;
+  }
+  .logo-icon{
+    width:42px;height:42px;
+    background:linear-gradient(135deg,#d4af37,#f0c040);
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;
+    box-shadow:0 4px 20px rgba(212,175,55,.3);
+  }
+  .logo-txt{font-size:20px;font-weight:800;color:#fff}
+  .logo-badge{
+    font-size:9px;font-weight:700;letter-spacing:.08em;
+    background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.3);
+    color:#d4af37;padding:2px 7px;border-radius:5px;
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  .code{
+    font-size:100px;font-weight:900;
+    background:linear-gradient(135deg,#d4af37,rgba(212,175,55,.3));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+    line-height:1;margin-bottom:8px;
+    font-family:'JetBrains Mono',monospace;
+  }
+
+  .bird{font-size:52px;margin-bottom:16px;display:block;animation:wobble 3s ease-in-out infinite}
+  @keyframes wobble{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+
+  h1{font-size:22px;font-weight:700;color:#fff;margin-bottom:10px}
+  p{font-size:14px;color:rgba(255,255,255,.45);line-height:1.6;margin-bottom:32px}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:14px 28px;border-radius:14px;
+    background:linear-gradient(135deg,rgba(212,175,55,.2),rgba(212,175,55,.08));
+    border:1px solid rgba(212,175,55,.35);
+    color:#d4af37;font-size:15px;font-weight:700;
+    text-decoration:none;cursor:pointer;
+    transition:all .2s;
+    font-family:inherit;
+  }
+  .btn:hover{background:linear-gradient(135deg,rgba(212,175,55,.3),rgba(212,175,55,.15));transform:translateY(-2px);box-shadow:0 8px 24px rgba(212,175,55,.2)}
+
+  .hint{
+    margin-top:24px;
+    font-size:12px;color:rgba(255,255,255,.2);
+    font-family:'JetBrains Mono',monospace;
+  }
+</style>
+</head>
+<body>
+<div class="bg">
+  <div class="bg-circle"></div>
+  <div class="bg-circle"></div>
+  <div class="bg-circle"></div>
+</div>
+
+<div class="wrap">
+  <div class="logo">
+    <div class="logo-icon">🦅</div>
+    <span class="logo-txt">RavenEye</span>
+    <span class="logo-badge">PRO</span>
+  </div>
+
+  <div class="code">404</div>
+  <span class="bird">🦅</span>
+
+  <h1>Страница не найдена</h1>
+  <p>Похоже ворон улетел не туда.<br>Эта страница не существует или была удалена.</p>
+
+  <a href="/" class="btn">
+    ← Вернуться в приложение
+  </a>
+
+  <div class="hint">ravenscan.it.com</div>
+</div>
+</body>
+</html>
