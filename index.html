@@ -1,0 +1,831 @@
+<link rel="stylesheet" href="style.css">
+
+
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#0b0d12">
+<!-- PWA META -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DEX Scanner">
+<meta name="theme-color" content="#0b0d12">
+
+<!-- DELETED USER BANNER -->
+<div class="deleted-banner" id="deleted-banner">
+  <div class="deleted-banner-icon">🚫</div>
+  <div class="deleted-banner-title">Доступ закрыт</div>
+  <div class="deleted-banner-sub">Ваш аккаунт был удалён администратором.<br>Обратитесь к администратору для восстановления доступа.</div>
+  <button class="deleted-banner-btn" onclick="window.doLogout()">← Выйти</button>
+</div>
+
+<!-- OFFLINE BANNER -->
+<div class="ptr-indicator" id="ptr-indicator">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="ptr-icon"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+  <span id="ptr-text">Потяните для обновления</span>
+</div>
+<div class="offline-banner" id="offline-banner">⚡ Нет соединения — данные могут быть устаревшими</div>
+
+<!-- ANIMATED BG -->
+<canvas class="app-canvas" id="app-canvas"></canvas>
+
+<!-- LOGIN -->
+<!-- ═══ SPLASH SCREEN ═══ -->
+<div id="splash-screen" style="position:fixed;inset:0;z-index:9998;background:#0b0d12;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease">
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div style="width:80px;height:80px;background:#0b0d12;border-radius:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 40px rgba(212,175,55,.35);margin-bottom:20px;animation:splashPop .5s cubic-bezier(.34,1.56,.64,1);overflow:hidden">
+      <img src="/icons/icon-192.png" alt="RavenEye" style="width:100%;height:100%;object-fit:cover;border-radius:22px" onerror="this.style.display='none';this.parentNode.innerHTML='🦅';this.parentNode.style.fontSize='42px'">
+    </div>
+    <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px">RavenEye</div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.15em;color:#d4af37;margin-top:4px;font-family:'JetBrains Mono',monospace">PRO SCANNER</div>
+  </div>
+  <div style="position:absolute;bottom:60px;display:flex;flex-direction:column;align-items:center;gap:10px">
+    <div style="width:48px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">
+      <div id="splash-bar" style="height:100%;background:linear-gradient(90deg,#d4af37,#f0c040);border-radius:2px;width:0%;transition:width .4s"></div>
+    </div>
+    <div id="splash-txt" style="font-size:11px;color:rgba(255,255,255,.25);font-family:'JetBrains Mono',monospace">Загрузка...</div>
+  </div>
+</div>
+<style>@keyframes splashPop{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}</style>
+<div class="login-screen" id="login-screen">
+  <div class="login-bg"></div>
+  <div class="login-grid"></div>
+  <div class="login-glow"></div>
+  <div class="login-box">
+    <div class="login-logo-wrap">
+      <div class="login-logo-icon" style="background:#0b0d12;border-color:rgba(212,175,55,.4);overflow:hidden;padding:3px;display:flex;align-items:center;justify-content:center;border-radius:10px">
+        <img src="icon-192.png" width="30" height="30" style="display:block;object-fit:contain">
+      </div>
+      <div class="login-logo-name" style="color:#e8dfc0">Raven<span style="color:#d4af37">Eye</span></div>
+    </div>
+    <div class="login-badge" style="background:rgba(212,175,55,.12);border-color:rgba(212,175,55,.3);color:#d4af37">PRO ACCESS</div>
+    <div class="login-heading">Вход в систему</div>
+    <div class="login-sub">Введите ваш персональный ID<br>для доступа к торговым сигналам</div>
+    <div class="login-label">Персональный ID</div>
+    <input class="login-inp" id="login-inp" placeholder="TRD-0000-XX" maxlength="12" oninput="this.value=this.value.toUpperCase()"/>
+    <button class="login-btn" id="login-btn">ВОЙТИ В СИСТЕМУ</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="main-app" style="display:none">
+
+<div class="topbar">
+  <div class="topbar-l">
+    <div class="logo">
+      <div class="logo-icon-wrap" style="background:#0b0d12;border-color:rgba(212,175,55,.45);overflow:hidden;padding:2px;width:34px;height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:10px">
+        <img src="favicon.png" width="30" height="30" style="display:block;object-fit:contain;border-radius:6px">
+      </div>
+      <div><div class="logo-txt" style="color:#e8dfc0">Raven<span style="color:#d4af37">Eye</span></div><div class="logo-sub" style="color:rgba(212,175,55,.45)">PRO v2.0</div></div>
+    </div>
+    <div class="sep"></div>
+    <span class="pill-live">LIVE</span>
+  </div>
+  <div class="topbar-r">
+    <span class="time-display" id="top-time">—</span>
+    <span class="best-spread-pill" id="top-best-spread" style="display:none"></span>
+    <button class="topbar-btn" id="mob-filter-btn" onclick="openMobFilters()" style="display:none">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      <span id="mob-filter-badge" style="display:none;width:6px;height:6px;border-radius:50%;background:#d4af37;position:absolute;top:4px;right:4px"></span>
+    </button>
+    <button class="topbar-btn" id="tg-connect-btn" title="Подключить Telegram">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 13.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+    </button>
+    <button class="topbar-btn" id="profile-open-btn" onclick="openProfileModal()">👤 Профиль</button>
+    <button class="topbar-btn" id="fs-btn" title="Полный экран">⛶</button>
+    <button class="topbar-btn" id="theme-btn" title="Сменить тему">🌙</button>
+    <button class="topbar-btn" id="alert-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+      Алерты
+    </button>
+  </div>
+</div>
+
+<div class="profile-bar" id="profile-bar">
+  <div class="profile-section">
+    <div class="profile-avatar" id="profile-avatar">?</div>
+    <div><div class="profile-name" id="profile-name">—</div><div class="profile-id-txt" id="profile-id-txt">ID: —</div></div>
+  </div>
+  <div class="profile-section">
+    <div><div class="profile-label">Капитал</div><div class="profile-balance" id="profile-balance">$0</div></div>
+  </div>
+  <div class="profile-section">
+    <div><div class="profile-label">Доступные сети</div><div class="net-grid" id="profile-nets">—</div></div>
+  </div>
+  <div class="profile-section">
+    <button class="btn-logout" id="logout-btn">← Выйти</button>
+  </div>
+</div>
+
+<div class="chain-tabs">
+  <button class="ctab on" onclick="setChain('all',this)">Все сети</button>
+  <button class="ctab" onclick="setChain('bsc',this)"><span class="cdot" style="background:#F0B90B"></span>BNB Chain<div class="spark" id="spark-bsc"></div></button>
+  <button class="ctab" onclick="setChain('arb',this)"><span class="cdot" style="background:#29B6F6"></span>Arbitrum<div class="spark" id="spark-arb"></div></button>
+  <button class="ctab" onclick="setChain('eth',this)"><span class="cdot" style="background:#6366F1"></span>Ethereum<div class="spark" id="spark-eth"></div></button>
+  <button class="ctab" onclick="setChain('sol',this)"><span class="cdot" style="background:#9945FF"></span>Solana<div class="spark" id="spark-sol"></div></button>
+
+</div>
+
+<div id="day-stats-bar" style="display:none;padding:6px 16px;background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(212,175,55,.04));border-bottom:1px solid rgba(212,175,55,.12);display:flex;align-items:center;gap:12px;font-family:'JetBrains Mono',monospace;font-size:10px;overflow-x:auto;white-space:nowrap">
+  <span style="color:rgba(212,175,55,.6);font-weight:700;letter-spacing:.05em">СЕГОДНЯ</span>
+  <span style="color:var(--txt2)">📊 <b id="day-signals" style="color:var(--txt)">0</b> сигналов</span>
+  <span style="color:var(--txt2)">📈 лучший <b id="day-best" style="color:#1db954">—</b></span>
+  <span style="color:var(--txt2)">💰 заработано <b id="day-earned" style="color:#d4af37">$0</b></span>
+  <span style="color:var(--txt2)">⏱ ср.спред <b id="day-avg" style="color:var(--txt)">—</b></span>
+</div>
+<div class="stats-pills" id="stats-pills">
+  <div class="stat-pill">
+    <span class="stat-pill-label">пар</span>
+    <span class="stat-pill-val" id="pill-pairs" style="color:var(--txt)">0</span>
+  </div>
+  <div class="stat-pill stat-pill-green">
+    <span class="stat-pill-label">ср. спред</span>
+    <span class="stat-pill-val" id="pill-avg" style="color:#1db954">—</span>
+  </div>
+  <div class="stat-pill stat-pill-amber">
+    <span class="stat-pill-label">лучший</span>
+    <span class="stat-pill-val" id="pill-best" style="color:#f0a500">—</span>
+  </div>
+  <div class="stat-pill stat-pill-blue">
+    <span class="stat-pill-label">объём</span>
+    <span class="stat-pill-val" id="pill-vol" style="color:#29B6F6">—</span>
+  </div>
+</div>
+
+<div class="filters">
+  <span class="filter-label">Мин. спред:</span>
+  <button class="filter-pill on" id="sp-0" onclick="setSpread(0,this)">Любой</button>
+  <button class="filter-pill" id="sp-05" onclick="setSpread(0.5,this)">≥0.5%</button>
+  <button class="filter-pill" id="sp-1" onclick="setSpread(1,this)">≥1%</button>
+  <button class="filter-pill" id="sp-15" onclick="setSpread(1.5,this)">≥1.5%</button>
+  <div class="filter-sep"></div>
+  <span class="filter-label">Объём:</span>
+  <button class="filter-pill on" id="vol-0" onclick="setVol(0,this)">Любой</button>
+  <button class="filter-pill" id="vol-100" onclick="setVol(100000,this)">$100K+</button>
+  <button class="filter-pill" id="vol-1m" onclick="setVol(1000000,this)">$1M+</button>
+  <div class="filter-sep"></div>
+  <span class="filter-label">DEX:</span>
+  <button class="filter-pill on" id="dex-all" onclick="setDex('',this)">Все</button>
+  <button class="filter-pill" id="dex-uni" onclick="setDex('Uniswap',this)">Uniswap</button>
+  <button class="filter-pill" id="dex-cake" onclick="setDex('Pancake',this)">PancakeSwap</button>
+  <button class="filter-pill" id="dex-sushi" onclick="setDex('Sushi',this)">SushiSwap</button>
+  <button class="filter-pill" id="dex-inch" onclick="setDex('1inch',this)">1inch</button>
+  <div class="filter-sep"></div>
+  <span class="filter-label">Сорт.:</span>
+  <button class="sort-pill on" id="sort-spread" onclick="setSort('spread',this)">Спред ↓</button>
+  <button class="sort-pill" id="sort-vol" onclick="setSort('vol',this)">Объём</button>
+</div>
+
+<div class="main">
+  <div class="trades-col" id="trades-col">
+    <div class="empty-state">
+      <div class="radar-wrap">
+        <div class="radar-circle"></div><div class="radar-circle"></div><div class="radar-circle"></div>
+        <div class="radar-crosshair"></div>
+        <div class="radar-sweep"></div>
+        <div class="radar-ping" style="top:22px;left:50px"></div>
+        <div class="radar-dot" style="top:18px;left:46px"></div>
+      </div>
+      <div class="empty-title">Подключение к серверу...</div>
+      <div class="empty-sub" style="font-family:'Space Grotesk',sans-serif;font-size:13px">Получаем торговые сигналы<br>в реальном времени</div>
+    </div>
+  </div>
+  
+
+<!-- ПК ТАЙМЕР SIDEBAR -->
+<div class="pc-timer-sidebar" id="pc-timer-sidebar">
+  <div class="pc-timer-empty" id="pc-timer-empty">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <div style="font-size:12px;color:var(--txt3);margin-top:10px;text-align:center;font-family:'JetBrains Mono',monospace;line-height:1.6">Нет активной<br>сделки</div>
+  </div>
+  <div class="pc-timer-active" id="pc-timer-active" style="display:none">
+    <div class="pc-timer-header">
+      <div class="pc-timer-badge" id="pc-timer-badge"></div>
+      <div class="pc-timer-pair" id="pc-timer-pair">—</div>
+      <div class="pc-timer-dex" id="pc-timer-dex"></div>
+    </div>
+    <div class="pc-timer-ring-wrap">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="6"/>
+        <circle id="pc-timer-ring" cx="60" cy="60" r="52" fill="none" stroke="#1db954" stroke-width="6"
+          stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0"
+          transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .5s,stroke .5s"/>
+      </svg>
+      <div class="pc-timer-time-wrap">
+        <div class="pc-timer-countdown" id="pc-timer-countdown">--:--</div>
+        <div class="pc-timer-label" id="pc-timer-label">осталось</div>
+      </div>
+    </div>
+    <div class="pc-timer-stats">
+      <div class="pc-timer-stat"><div class="pc-timer-stat-label">СПРЕД</div><div class="pc-timer-stat-val" id="pc-spread" style="color:#1db954">—</div></div>
+      <div class="pc-timer-stat"><div class="pc-timer-stat-label">ДОХОД</div><div class="pc-timer-stat-val" id="pc-yield" style="color:#d4af37">—</div></div>
+      <div class="pc-timer-stat"><div class="pc-timer-stat-label">ОБЪЁМ</div><div class="pc-timer-stat-val" id="pc-vol">—</div></div>
+    </div>
+    <div style="padding:0 16px 12px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace;margin-bottom:5px">
+        <span>Окно входа</span><span id="pc-window-label">—</span>
+      </div>
+      <div style="height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden">
+        <div id="pc-window-bar" style="height:100%;width:100%;background:#1db954;border-radius:2px;transition:width .5s,background .5s"></div>
+      </div>
+    </div>
+    <div class="pc-timer-btns">
+      <button class="pc-fix-btn" id="pc-fix-btn" onclick="openFixProfitModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Зафиксировать прибыль
+      </button>
+      <button class="pc-cancel-btn" onclick="clearActiveTrade()">Отменить сделку</button>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="botbar">
+  <div class="bot-left">
+    <div class="bot-info" id="api-status">● Подключение...</div>
+    <button class="reconnect-btn" id="reconnect-btn">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+      Reconnect
+    </button>
+  </div>
+  <div class="bot-ticker" id="bot-ticker" style="display:none"><span class="bot-ticker-inner" id="bot-ticker-text"></span></div>
+  <div class="bot-info" id="last-update">—</div>
+</div>
+
+</div><!-- /main-app -->
+
+
+<!-- ═══ ОНБОРДИНГ ═══ -->
+<div id="onboarding-overlay" style="display:none;position:fixed;inset:0;z-index:950;background:rgba(7,9,16,.97);overflow-y:auto">
+  <div style="min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px">
+    <div style="width:100%;max-width:400px">
+      <!-- Слайды -->
+      <div id="ob-slides">
+
+        <!-- Слайд 1 -->
+        <div class="ob-slide" id="ob-slide-1">
+          <div style="text-align:center;margin-bottom:32px">
+            <div style="font-size:64px;margin-bottom:16px">🦅</div>
+            <div style="font-size:26px;font-weight:800;color:#fff;margin-bottom:8px">Добро пожаловать<br>в <span style="color:#d4af37">RavenEye</span></div>
+            <div style="font-size:14px;color:rgba(255,255,255,.5);line-height:1.6">Профессиональный сканер DEX арбитражных возможностей в реальном времени</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:32px">
+            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px">
+              <div style="font-size:28px">📡</div>
+              <div>
+                <div style="font-size:14px;font-weight:600;color:#fff">Сигналы в реальном времени</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px">Мониторинг спредов на Ethereum, Arbitrum, Solana, BSC</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px">
+              <div style="font-size:28px">⏱</div>
+              <div>
+                <div style="font-size:14px;font-weight:600;color:#fff">Таймер входа</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px">Точное окно для входа в сделку и фиксации прибыли</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px">
+              <div style="font-size:28px">📱</div>
+              <div>
+                <div style="font-size:14px;font-weight:600;color:#fff">Уведомления в Telegram</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:2px">Моментальные алерты о новых сигналах прямо в чат</div>
+              </div>
+            </div>
+          </div>
+          <button onclick="obNext(2)" style="width:100%;padding:15px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,.25),rgba(212,175,55,.12));border:1px solid rgba(212,175,55,.4);color:#d4af37;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Далее →</button>
+        </div>
+
+        <!-- Слайд 2 -->
+        <div class="ob-slide" id="ob-slide-2" style="display:none">
+          <div style="text-align:center;margin-bottom:28px">
+            <div style="font-size:52px;margin-bottom:14px">📊</div>
+            <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:8px">Как читать сигналы</div>
+          </div>
+          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <div style="display:flex;gap:6px">
+                <div style="width:32px;height:32px;border-radius:50%;background:rgba(41,182,246,.15);border:1px solid rgba(41,182,246,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#29B6F6">USD</div>
+                <div style="width:32px;height:32px;border-radius:50%;background:rgba(41,182,246,.15);border:1px solid rgba(41,182,246,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#29B6F6">ARB</div>
+              </div>
+              <div>
+                <div style="font-size:15px;font-weight:700;color:#fff">USDT/ARB</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.4)">Uniswap V3 · Arbitrum</div>
+              </div>
+              <div style="margin-left:auto;font-size:15px;font-weight:700;color:#f0a500">+1.24%</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:rgba(255,255,255,.4)">Спред</span><span style="color:#1db954;font-weight:600">0.8% → 1.4%</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:rgba(255,255,255,.4)">Окно входа</span><span style="color:#fff">2–10 мин</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:rgba(255,255,255,.4)">Объём 24h</span><span style="color:#fff">$23.7B</span></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:28px">
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,.7)"><span style="color:#1db954;font-size:16px">●</span> Зелёный спред — безопасная сделка (&lt;1.1%)</div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,.7)"><span style="color:#f0a500;font-size:16px">●</span> Жёлтый — средний риск (1.1–1.8%)</div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,.7)"><span style="color:#e53e3e;font-size:16px">●</span> Красный — высокий риск (&gt;1.8%)</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button onclick="obNext(1)" style="flex:1;padding:14px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">← Назад</button>
+            <button onclick="obNext(3)" style="flex:2;padding:14px;border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,.25),rgba(212,175,55,.12));border:1px solid rgba(212,175,55,.4);color:#d4af37;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Далее →</button>
+          </div>
+        </div>
+
+        <!-- Слайд 3 -->
+        <div class="ob-slide" id="ob-slide-3" style="display:none">
+          <div style="text-align:center;margin-bottom:28px">
+            <div style="font-size:52px;margin-bottom:14px">🚀</div>
+            <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:8px">Готов к работе!</div>
+            <div style="font-size:14px;color:rgba(255,255,255,.5);line-height:1.6">Несколько советов для начала</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px">
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.15);border-radius:12px">
+              <span style="font-size:20px">📱</span>
+              <div style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.5">Подключи Telegram в <b style="color:#fff">Настройках</b> — получай уведомления о новых сигналах мгновенно</div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.15);border-radius:12px">
+              <span style="font-size:20px">⚡</span>
+              <div style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.5">Нажми на карточку сигнала чтобы запустить <b style="color:#fff">таймер входа</b> и получить точное окно</div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:rgba(212,175,55,.06);border:1px solid rgba(212,175,55,.15);border-radius:12px">
+              <span style="font-size:20px">💰</span>
+              <div style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.5">После сделки нажми <b style="color:#fff">Зафиксировать прибыль</b> чтобы обновить свой капитал</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button onclick="obNext(2)" style="flex:1;padding:14px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">← Назад</button>
+            <button onclick="obFinish()" style="flex:2;padding:14px;border-radius:14px;background:linear-gradient(135deg,rgba(29,185,84,.25),rgba(29,185,84,.12));border:1px solid rgba(29,185,84,.4);color:#1db954;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Начать работу 🚀</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Точки прогресса -->
+      <div style="display:flex;justify-content:center;gap:8px;margin-top:20px">
+        <div id="ob-dot-1" style="width:8px;height:8px;border-radius:50%;background:#d4af37;transition:all .3s"></div>
+        <div id="ob-dot-2" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .3s"></div>
+        <div id="ob-dot-3" style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .3s"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="profile-modal">
+  <div class="modal-sheet">
+    <div class="modal-drag"></div>
+    <div class="modal-hdr"><div class="modal-title">Профиль</div><button class="modal-close" id="profile-modal-close">✕</button></div>
+    <div class="modal-body" id="profile-modal-body"></div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal-sheet">
+    <div class="modal-drag"></div>
+    <div class="modal-hdr"><div class="modal-title" id="detail-modal-title">Детали сделки</div><button class="modal-close" id="detail-modal-close">✕</button></div>
+    <div class="modal-body" id="detail-modal-body"></div>
+  </div>
+</div>
+
+<!-- SHARE OVERLAY -->
+<div class="share-overlay" id="share-overlay">
+  <div>
+    <div class="share-card">
+      <div class="share-card-header">
+        <div class="share-card-logo">
+          <svg width="13" height="13" viewBox="0 0 60 60" fill="none"><path d="M10 30 C18 18 42 18 50 30 C42 42 18 42 10 30 Z" stroke="#d4af37" stroke-width="2" fill="rgba(212,175,55,.15)"/><circle cx="30" cy="30" r="7" fill="#d4af37"/><circle cx="30" cy="30" r="4" fill="#080a0f"/></svg>
+          RAVENEYE PRO
+        </div>
+        <div class="share-card-badge">LIVE SIGNAL</div>
+      </div>
+      <div class="share-card-body">
+        <div class="share-card-pair" id="share-pair">—</div>
+        <div class="share-card-pool" id="share-pool">—</div>
+        <div class="share-card-stats">
+          <div class="share-stat"><div class="share-stat-label">Спред</div><div class="share-stat-val" id="share-spread" style="color:#d4af37">—</div></div>
+          <div class="share-stat"><div class="share-stat-label">Доход</div><div class="share-stat-val" id="share-yield" style="color:#22c55e">—</div></div>
+          <div class="share-stat"><div class="share-stat-label">Объём</div><div class="share-stat-val" id="share-vol" style="color:rgba(255,255,255,.7)">—</div></div>
+        </div>
+      </div>
+      <div class="share-card-footer"><span id="share-chain">—</span><span id="share-time">—</span></div>
+    </div>
+    <div class="share-actions">
+      <button class="share-copy-btn" id="share-copy-btn">📋 Скопировать</button>
+      <button class="share-close-btn" id="share-close-btn">✕ Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="onboarding hidden" id="onboarding">
+  <div class="onboarding-card">
+    <div class="ob-header">
+      <div class="ob-logo">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.4);display:flex;align-items:center;justify-content:center">
+          <svg width="18" height="18" viewBox="0 0 60 60" fill="none"><path d="M10 30 C18 18 42 18 50 30 C42 42 18 42 10 30 Z" stroke="#d4af37" stroke-width="2" fill="rgba(212,175,55,.1)"/><circle cx="30" cy="30" r="7" fill="#d4af37"/><circle cx="30" cy="30" r="4" fill="#0b0d12"/></svg>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#e8dfc0">Raven<span style="color:#d4af37">Eye</span></div>
+          <div style="font-size:9px;color:rgba(212,175,55,.5);font-family:'JetBrains Mono',monospace">PRO ACCESS</div>
+        </div>
+      </div>
+      <div class="ob-welcome" id="ob-welcome-name">Добро пожаловать!</div>
+      <div class="ob-sub">Вы вошли в профессиональный сканер DEX арбитража в реальном времени</div>
+    </div>
+    <div class="ob-steps">
+      <div class="ob-step">
+        <div class="ob-step-num">1</div>
+        <div><div class="ob-step-title">Сигналы в реальном времени</div><div class="ob-step-sub">Карточки сделок обновляются автоматически. Нажмите на карточку для деталей и калькулятора прибыли</div></div>
+      </div>
+      <div class="ob-step">
+        <div class="ob-step-num">2</div>
+        <div><div class="ob-step-title">Фильтры и сети</div><div class="ob-step-sub">Переключайте сети вверху, фильтруйте по спреду, объёму и DEX. Сортировка по убыванию и возрастанию</div></div>
+      </div>
+      <div class="ob-step">
+        <div class="ob-step-num">3</div>
+        <div><div class="ob-step-title">🔒 Доступные сети</div><div class="ob-step-sub" id="ob-nets-sub">Доступ к сетям зависит от вашего капитала. Отслеживайте прогресс в профиле</div></div>
+      </div>
+    </div>
+    <button class="ob-btn" onclick="closeOnboarding()">Начать торговлю →</button>
+  </div>
+</div>
+
+<!-- PWA BANNER -->
+<div class="pwa-banner" id="pwa-banner">
+  <div class="pwa-icon">📱</div>
+  <div class="pwa-text"><div class="pwa-title">Установить DEX Scanner</div><div class="pwa-sub">Добавить на главный экран</div></div>
+  <button class="pwa-install-btn" id="pwa-install-btn">Установить</button>
+  <button class="pwa-close" id="pwa-close">✕</button>
+</div>
+
+<script>
+window.onerror=function(msg,src,line,col,err){
+  document.getElementById('login-error').textContent='JS Error: '+msg+' ('+src.split('/').pop()+':'+line+')';
+  console.error('GLOBAL ERROR:',msg,src,line,col,err);
+  return false;
+};
+</script>
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mob-nav" id="mob-nav">
+  <button class="mob-nav-btn mob-active" id="mob-btn-signals">
+    <div class="mob-nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12h3l3-8 4 16 3-10 2 2h5"/></svg>
+    </div>
+    <span class="mob-nav-label">Сигналы</span>
+  </button>
+  <button class="mob-nav-btn" id="mob-btn-calc" style="position:relative">
+    <div class="mob-nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <span class="mob-nav-label">Таймер</span>
+    <span class="timer-nav-badge" id="timer-nav-badge"></span>
+  </button>
+  <button class="mob-nav-btn" id="mob-btn-profile">
+    <div class="mob-nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    </div>
+    <span class="mob-nav-label">Профиль</span>
+  </button>
+  <button class="mob-nav-btn" id="mob-btn-settings">
+    <div class="mob-nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </div>
+    <span class="mob-nav-label">Настройки</span>
+  </button>
+</nav>
+
+<!-- SETTINGS OVERLAY -->
+<div class="mob-settings-overlay" id="mob-settings-overlay" onclick="closeMobSettings()"></div>
+
+<!-- SETTINGS SHEET -->
+<div class="mob-settings-sheet" id="mob-settings-sheet">
+  <div style="display:flex;justify-content:center;padding:10px 0 6px">
+    <div style="width:38px;height:4px;background:rgba(255,255,255,.15);border-radius:2px"></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 20px 14px">
+    <div style="font-size:17px;font-weight:700;color:#fff;letter-spacing:-.02em">Настройки</div>
+    <button onclick="closeMobSettings()" style="background:rgba(255,255,255,.08);border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;color:rgba(255,255,255,.5);font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
+  </div>
+  <div style="padding:0 20px 6px">
+    <div style="font-size:10px;font-weight:700;color:rgba(212,175,55,.6);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Внешний вид</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div style="width:34px;height:34px;border-radius:9px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.2);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#fff">Тёмная тема</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:1px" id="settings-theme-sub">Сейчас: тёмная</div>
+        </div>
+      </div>
+      <div id="settings-theme-toggle" onclick="settingsToggleTheme()" style="width:44px;height:26px;border-radius:13px;background:rgba(212,175,55,.2);border:1px solid rgba(212,175,55,.3);cursor:pointer;position:relative;transition:background .2s">
+        <div id="settings-theme-knob" style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#d4af37;transition:left .2s;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:6px 20px 6px">
+    <div style="font-size:10px;font-weight:700;color:rgba(212,175,55,.6);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Уведомления</div>
+    <button onclick="closeMobSettings();setTimeout(function(){showTgRegModal();},350);" style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;margin-bottom:6px;cursor:pointer;width:100%;text-align:left;font-family:inherit">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div style="width:34px;height:34px;border-radius:9px;background:rgba(41,182,246,.1);border:1px solid rgba(41,182,246,.2);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#29B6F6"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 13.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#fff">Telegram</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:1px" id="settings-tg-status">Нажмите для подключения</div>
+        </div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div style="width:34px;height:34px;border-radius:9px;background:rgba(29,185,84,.1);border:1px solid rgba(29,185,84,.2);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1db954" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/></svg>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#fff">Звуковые алерты</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:1px">Звук при новом сигнале</div>
+        </div>
+      </div>
+      <div id="settings-sound-toggle" onclick="settingsToggleSound()" style="width:44px;height:26px;border-radius:13px;background:rgba(29,185,84,.25);border:1px solid rgba(29,185,84,.3);cursor:pointer;position:relative;transition:background .2s">
+        <div id="settings-sound-knob" style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#1db954;transition:left .2s;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div style="width:34px;height:34px;border-radius:9px;background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.2);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F0A500" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#fff">Порог уведомлений</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:1px">Алерт при спреде от</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button onclick="settingsAlertThreshold(-0.5)" style="background:rgba(255,255,255,.08);border:none;width:24px;height:24px;border-radius:6px;cursor:pointer;color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center">−</button>
+        <span id="settings-alert-thr" style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:#d4af37;min-width:36px;text-align:center">0.5%</span>
+        <button onclick="settingsAlertThreshold(0.5)" style="background:rgba(255,255,255,.08);border:none;width:24px;height:24px;border-radius:6px;cursor:pointer;color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center">+</button>
+      </div>
+    </div>
+  </div>
+  <div style="padding:6px 20px 6px">
+    <div style="font-size:10px;font-weight:700;color:rgba(212,175,55,.6);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Сети</div>
+    <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#F0B90B"></div><span style="font-size:13px;font-weight:600;color:#fff">BNB Chain</span></div><div id="net-toggle-bsc" onclick="toggleNetVisibility('bsc',this)" style="width:44px;height:26px;border-radius:13px;background:#F0B90B28;border:1px solid #F0B90B44;cursor:pointer;position:relative;transition:background .2s"><div style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#F0B90B;transition:left .2s;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div></div></div><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#29B6F6"></div><span style="font-size:13px;font-weight:600;color:#fff">Arbitrum</span></div><div id="net-toggle-arb" onclick="toggleNetVisibility('arb',this)" style="width:44px;height:26px;border-radius:13px;background:#29B6F628;border:1px solid #29B6F644;cursor:pointer;position:relative;transition:background .2s"><div style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#29B6F6;transition:left .2s;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div></div></div><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#6366F1"></div><span style="font-size:13px;font-weight:600;color:#fff">Ethereum</span></div><div id="net-toggle-eth" onclick="toggleNetVisibility('eth',this)" style="width:44px;height:26px;border-radius:13px;background:#6366F128;border:1px solid #6366F144;cursor:pointer;position:relative;transition:background .2s"><div style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#6366F1;transition:left .2s;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div></div></div><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#9945FF"></div><span style="font-size:13px;font-weight:600;color:#fff">Solana</span></div><div id="net-toggle-sol" onclick="toggleNetVisibility('sol',this)" style="width:44px;height:26px;border-radius:13px;background:#9945FF28;border:1px solid #9945FF44;cursor:pointer;position:relative;transition:background .2s"><div style="position:absolute;top:3px;left:21px;width:18px;height:18px;border-radius:50%;background:#9945FF;transition:left .2s;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div></div></div>    </div>
+  </div>
+  <div style="padding:6px 20px 20px">
+    <div style="font-size:10px;font-weight:700;color:rgba(212,175,55,.6);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Аккаунт</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:12px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div style="width:34px;height:34px;border-radius:9px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#fff">Мой ID</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:1px;font-family:'JetBrains Mono',monospace" id="settings-user-id">—</div>
+        </div>
+      </div>
+      <button onclick="copyUserId()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;cursor:pointer;color:rgba(255,255,255,.5);font-size:10px;font-family:'Space Grotesk',sans-serif">Копировать</button>
+    </div>
+    <a href="https://t.me/Denslezzz?text=Привет!%20Мой%20ID%3A%20" id="support-link" target="_blank" style="display:flex;align-items:center;gap:11px;padding:13px 14px;background:rgba(41,182,246,.06);border:1px solid rgba(41,182,246,.15);border-radius:12px;cursor:pointer;width:100%;text-decoration:none;margin-bottom:6px">
+      <div style="width:34px;height:34px;border-radius:9px;background:rgba(41,182,246,.1);border:1px solid rgba(41,182,246,.2);display:flex;align-items:center;justify-content:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#29B6F6"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 13.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:#29B6F6">Поддержка</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:1px">@Denslezzz</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2" style="margin-left:auto"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
+    <button onclick="closeMobSettings();window.doLogout();" style="display:flex;align-items:center;gap:11px;padding:13px 14px;background:rgba(229,62,62,.06);border:1px solid rgba(229,62,62,.15);border-radius:12px;cursor:pointer;width:100%;text-align:left;font-family:inherit">
+      <div style="width:34px;height:34px;border-radius:9px;background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.2);display:flex;align-items:center;justify-content:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e53e3e" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:#e53e3e">Выйти из аккаунта</div>
+    </button>
+  </div>
+</div>
+
+<!-- CALCULATOR SCREEN -->
+<div class="mob-calc-screen" id="mob-calc-screen">
+  <div style="position:sticky;top:0;z-index:10;background:rgba(10,12,17,.97);border-bottom:1px solid rgba(255,255,255,.07);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(12px)">
+    <div>
+      <div style="font-size:17px;font-weight:700;color:#fff;letter-spacing:-.02em">Калькулятор</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.35);margin-top:1px;font-family:'JetBrains Mono',monospace">Расчёт прибыли</div>
+    </div>
+    <button onclick="closeMobCalc()" style="background:rgba(255,255,255,.08);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;color:rgba(255,255,255,.6);font-size:18px;display:flex;align-items:center;justify-content:center">✕</button>
+  </div>
+  <div style="padding:16px 18px 12px">
+    <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Сумма входа</div>
+    <div style="background:#13161f;border:1px solid rgba(212,175,55,.25);border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <input id="mob-calc-inp" type="number" value="10000" min="100" step="100"
+        style="background:transparent;border:none;outline:none;color:#d4af37;font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;width:100%"
+        oninput="renderMobCalc()"/>
+      <span style="color:rgba(255,255,255,.3);font-size:12px;margin-left:8px;flex-shrink:0">USDT</span>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button onclick="setMobCalcAmt(1000)" class="mob-calc-quick">$1K</button>
+      <button onclick="setMobCalcAmt(5000)" class="mob-calc-quick">$5K</button>
+      <button onclick="setMobCalcAmt(10000)" class="mob-calc-quick mob-calc-quick-active">$10K</button>
+      <button onclick="setMobCalcAmt(25000)" class="mob-calc-quick">$25K</button>
+      <button onclick="setMobCalcAmt(currentUser?currentUser.balance||10000:10000)" class="mob-calc-quick">Max</button>
+    </div>
+  </div>
+  <div style="height:1px;background:rgba(255,255,255,.05);margin:0 18px"></div>
+  <div style="padding:12px 18px" id="mob-calc-results">
+    <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Активные сигналы</div>
+    <div style="color:rgba(255,255,255,.2);font-size:12px;text-align:center;padding:24px 0;font-family:'JetBrains Mono',monospace">Нет активных сигналов</div>
+  </div>
+</div>
+
+<!-- FILTER OVERLAY -->
+<div class="mob-filter-overlay" id="mob-filter-overlay" onclick="closeMobFilters()"></div>
+
+<!-- FILTER SHEET -->
+<div class="mob-filter-sheet" id="mob-filter-sheet">
+  <div style="display:flex;justify-content:center;padding:10px 0 4px">
+    <div style="width:38px;height:4px;background:rgba(255,255,255,.15);border-radius:2px"></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 20px 12px">
+    <div style="font-size:17px;font-weight:700;color:#fff;letter-spacing:-.02em">Фильтры</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="resetMobFilters()" style="background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.2);border-radius:8px;padding:5px 12px;cursor:pointer;color:#e53e3e;font-size:11px;font-weight:700;font-family:'Space Grotesk',sans-serif">Сбросить</button>
+      <button onclick="applyMobFilters()" style="background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.35);border-radius:8px;padding:5px 14px;cursor:pointer;color:#d4af37;font-size:11px;font-weight:700;font-family:'Space Grotesk',sans-serif">Готово</button>
+    </div>
+  </div>
+  <div style="padding:0 20px 14px;border-bottom:1px solid rgba(255,255,255,.05)">
+    <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Мин. спред</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <button class="mob-filter-pill on" id="mf-sp-0" onclick="setMobFilterSpread(0,this)">Любой</button>
+      <button class="mob-filter-pill" id="mf-sp-05" onclick="setMobFilterSpread(0.5,this)">≥0.5%</button>
+      <button class="mob-filter-pill" id="mf-sp-1" onclick="setMobFilterSpread(1,this)">≥1%</button>
+      <button class="mob-filter-pill" id="mf-sp-15" onclick="setMobFilterSpread(1.5,this)">≥1.5%</button>
+    </div>
+  </div>
+  <div style="padding:12px 20px 14px;border-bottom:1px solid rgba(255,255,255,.05)">
+    <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Объём</div>
+    <div style="display:flex;gap:7px">
+      <button class="mob-filter-pill on" id="mf-vol-0" onclick="setMobFilterVol(0,this)">Любой</button>
+      <button class="mob-filter-pill" id="mf-vol-100k" onclick="setMobFilterVol(100000,this)">$100K+</button>
+      <button class="mob-filter-pill" id="mf-vol-1m" onclick="setMobFilterVol(1000000,this)">$1M+</button>
+    </div>
+  </div>
+  <div style="padding:12px 20px 14px;border-bottom:1px solid rgba(255,255,255,.05)">
+    <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">DEX</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <button class="mob-filter-pill on" id="mf-dex-all" onclick="setMobFilterDex('',this)">Все</button>
+      <button class="mob-filter-pill" id="mf-dex-uni" onclick="setMobFilterDex('Uniswap',this)">Uniswap</button>
+      <button class="mob-filter-pill" id="mf-dex-cake" onclick="setMobFilterDex('Pancake',this)">PancakeSwap</button>
+      <button class="mob-filter-pill" id="mf-dex-sushi" onclick="setMobFilterDex('Sushi',this)">SushiSwap</button>
+      <button class="mob-filter-pill" id="mf-dex-inch" onclick="setMobFilterDex('1inch',this)">1inch</button>
+    </div>
+  </div>
+  <div style="padding:12px 20px 16px">
+    <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Сортировка</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <button class="mob-filter-pill on" id="mf-sort-sp-desc" onclick="setMobFilterSort('spread','desc',this)">Спред ↓</button>
+      <button class="mob-filter-pill" id="mf-sort-sp-asc" onclick="setMobFilterSort('spread','asc',this)">Спред ↑</button>
+      <button class="mob-filter-pill" id="mf-sort-vol-desc" onclick="setMobFilterSort('vol','desc',this)">Объём ↓</button>
+      <button class="mob-filter-pill" id="mf-sort-vol-asc" onclick="setMobFilterSort('vol','asc',this)">Объём ↑</button>
+    </div>
+  </div>
+</div>
+<!-- TIMER SCREEN -->
+<div class="mob-timer-screen" id="mob-timer-screen">
+  <!-- sticky header -->
+  <div style="position:sticky;top:0;z-index:10;background:rgba(7,9,16,.97);border-bottom:1px solid rgba(255,255,255,.07);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(12px)">
+    <div>
+      <div style="font-size:17px;font-weight:700;color:#fff;letter-spacing:-.02em">Таймер</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.3);margin-top:1px;font-family:'JetBrains Mono',monospace" id="timer-header-sub">Выберите сделку</div>
+    </div>
+    <button onclick="closeMobTimer()" style="background:rgba(255,255,255,.08);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;color:rgba(255,255,255,.5);font-size:18px;display:flex;align-items:center;justify-content:center">✕</button>
+  </div>
+
+  <!-- empty state -->
+  <div id="timer-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1.5" style="margin-bottom:16px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,.3);margin-bottom:8px">Нет активной сделки</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.2);line-height:1.6">Нажмите на любую сделку<br>в разделе «Сигналы»</div>
+  </div>
+
+  <!-- active trade view -->
+  <div id="timer-active" style="display:none;padding:16px 18px">
+    <!-- chain + pair header -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <div id="timer-chain-badge" style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(41,182,246,.12);border:1px solid rgba(41,182,246,.25);color:#29B6F6"></div>
+      <div id="timer-dex-name" style="font-size:10px;color:rgba(255,255,255,.3)"></div>
+    </div>
+    <div style="text-align:center;margin-bottom:20px">
+      <div id="timer-pair-name" style="font-size:24px;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:4px"></div>
+      <div id="timer-pool-name" style="font-size:11px;color:rgba(255,255,255,.3)"></div>
+    </div>
+
+    <!-- circle timer -->
+    <div style="display:flex;justify-content:center;margin-bottom:20px">
+      <div style="position:relative;width:160px;height:160px">
+        <svg viewBox="0 0 160 160" width="160" height="160" style="display:block">
+          <circle class="timer-ring-track" cx="80" cy="80" r="68"/>
+          <circle class="timer-ring-prog" id="timer-ring" cx="80" cy="80" r="68" stroke="#1db954" stroke-dasharray="427.3" stroke-dashoffset="0"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+          <div id="timer-countdown" style="font-size:36px;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace;letter-spacing:-.03em">--:--</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.3)">осталось</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- stats grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Спред</div>
+        <div id="timer-spread" style="font-size:14px;font-weight:700;color:#1db954;font-family:'JetBrains Mono',monospace"></div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Доход</div>
+        <div id="timer-yield" style="font-size:14px;font-weight:700;color:#d4af37;font-family:'JetBrains Mono',monospace"></div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Объём</div>
+        <div id="timer-vol" style="font-size:14px;font-weight:700;color:rgba(255,255,255,.6);font-family:'JetBrains Mono',monospace"></div>
+      </div>
+    </div>
+
+    <!-- time window progress bar -->
+    <div style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.3);margin-bottom:6px">
+        <span>Окно входа</span>
+        <span id="timer-window-label"></span>
+      </div>
+      <div style="background:rgba(255,255,255,.06);border-radius:6px;height:6px;overflow:hidden">
+        <div id="timer-window-bar" style="height:100%;border-radius:6px;background:#1db954;transition:width 1s linear"></div>
+      </div>
+    </div>
+
+    <!-- fix button -->
+    <button id="timer-fix-btn" style="width:100%;background:rgba(212,175,55,.12);border:1px solid rgba(212,175,55,.3);border-radius:12px;padding:14px;font-size:14px;font-weight:700;color:#d4af37;font-family:'Space Grotesk',sans-serif;cursor:pointer;letter-spacing:.02em;transition:background .15s">
+      Зафиксировать прибыль
+    </button>
+
+    <!-- cancel button -->
+    <button id="timer-cancel-btn" style="width:100%;margin-top:8px;background:transparent;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:11px;font-size:12px;font-weight:600;color:rgba(255,255,255,.3);font-family:'Space Grotesk',sans-serif;cursor:pointer;transition:border-color .15s">
+      Отменить сделку
+    </button>
+  </div>
+</div>
+
+<!-- FIX PROFIT OVERLAY -->
+<div class="fix-profit-overlay" id="fix-profit-overlay">
+  <div class="fix-profit-card">
+    <!-- icon + title -->
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="width:44px;height:44px;border-radius:12px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      </div>
+      <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px">Зафиксировать прибыль</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.35)" id="fix-modal-pair">—</div>
+    </div>
+
+    <!-- input label -->
+    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Сколько заработали?</div>
+
+    <!-- amount input -->
+    <div style="background:rgba(255,255,255,.04);border:1px solid rgba(212,175,55,.25);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-size:20px;font-weight:700;color:#d4af37">+$</span>
+      <input id="fix-profit-inp" type="number" placeholder="0" min="0" step="0.01"
+        style="background:transparent;border:none;outline:none;color:#d4af37;font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;width:100%;min-width:0"/>
+    </div>
+
+    <!-- hint -->
+    <div style="font-size:10px;color:rgba(255,255,255,.25);text-align:center;margin-bottom:18px" id="fix-modal-hint">Будет добавлено к вашему капиталу</div>
+
+    <!-- quick amounts -->
+    <div style="display:flex;gap:6px;margin-bottom:16px" id="fix-quick-btns"></div>
+
+    <!-- action buttons -->
+    <div style="display:flex;gap:8px">
+      <button id="fix-cancel-btn" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px;font-size:13px;font-weight:700;color:rgba(255,255,255,.4);font-family:'Space Grotesk',sans-serif;cursor:pointer">
+        Отмена
+      </button>
+      <button id="fix-confirm-btn" style="flex:2;background:rgba(212,175,55,.15);border:1px solid rgba(212,175,55,.35);border-radius:10px;padding:12px;font-size:13px;font-weight:700;color:#d4af37;font-family:'Space Grotesk',sans-serif;cursor:pointer;transition:background .15s">
+        Подтвердить
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<!-- App modules -->
+<script src="config.js"></script>
+<script src="state.js"></script>
+<script src="ui.js"></script>
+<script src="events.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
